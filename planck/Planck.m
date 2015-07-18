@@ -35,7 +35,7 @@
     [contextManager setupGlobalContext];
     [contextManager setUpAmblyImportScript];
    
-    NSString* mainJsFilePath = [[outURL URLByAppendingPathComponent:@"deps" isDirectory:NO]
+    NSString* mainJsFilePath = [[outURL URLByAppendingPathComponent:@"main" isDirectory:NO]
                                 URLByAppendingPathExtension:@"js"].path;
     
     NSURL* googDirectory = [outURL URLByAppendingPathComponent:@"goog"];
@@ -44,12 +44,6 @@
                                  googBasePath:[[googDirectory URLByAppendingPathComponent:@"base" isDirectory:NO] URLByAppendingPathExtension:@"js"].path];
     
     JSContext* context = [JSContext contextWithJSGlobalContextRef:contextManager.context];
-    
-    NSURL* outCljsURL = [outURL URLByAppendingPathComponent:@"cljs"];
-    NSString* macrosJsPath = [[outCljsURL URLByAppendingPathComponent:@"core$macros"]
-                              URLByAppendingPathExtension:@"js"].path;
-    
-    [self processFile:macrosJsPath calling:nil inContext:context];
     
     [self requireAppNamespaces:context];
     
@@ -155,24 +149,6 @@
     inputString = [inputString stringByTrimmingCharactersInSet: [NSCharacterSet newlineCharacterSet]];
     
     return inputString;
-}
-
-- (void)processFile:(NSString*)path calling:(NSString*)fn inContext:(JSContext*)context
-{
-    NSError* error = nil;
-    NSString* contents = [NSString stringWithContentsOfFile:path
-                                                   encoding:NSUTF8StringEncoding error:&error];
-    
-    if (!fn) {
-        [context evaluateScript:contents];
-    } else {
-        JSValue* processFileFn = [self getValue:fn inNamespace:@"replete.core" fromContext:context];
-        NSAssert(!processFileFn.isUndefined, @"Could not find the process file function");
-        
-        if (!error && contents) {
-            [processFileFn callWithArguments:@[contents]];
-        }
-    }
 }
 
 -(void)requireAppNamespaces:(JSContext*)context
