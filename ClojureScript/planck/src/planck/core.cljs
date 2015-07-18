@@ -6,7 +6,8 @@
             [cljs.tools.reader.reader-types :refer [string-push-back-reader]]
             [cljs.analyzer :as ana]
             [cljs.repl :as repl]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [cljs.env]))
 
 (def DEBUG false)
 
@@ -91,19 +92,19 @@
                       (let [sym (second form)
                             var (resolve env sym)]
                         (:meta var)))))
-            (try (do
-                   (cljs/eval cenv form
-                       (fn [res]
-                         (prn res)))
-                   (when-not
-                     (or ('#{*1 *2 *3 *e} form)
-                       (ns-form? form))
-                     (set! *3 *2)
-                     (set! *2 *1)
-                     (set! *1 ret))
-                   (reset! current-ns ana/*cljs-ns*))
-                 (catch js/Error e
-                   (set! *e e)
-                   (print (.-message e) "\n" (first (s/split (.-stack e) #"eval code")))))))
+            (try
+              (cljs/eval cenv form
+                (fn [res]
+                  (prn res)
+                  (when-not
+                    (or ('#{*1 *2 *3 *e} form)
+                      (ns-form? form))
+                    (set! *3 *2)
+                    (set! *2 *1)
+                    (set! *1 res))
+                  (reset! current-ns ana/*cljs-ns*)))
+              (catch js/Error e
+                (set! *e e)
+                (print (.-message e) "\n" (first (s/split (.-stack e) #"eval code")))))))
         (catch js/Error e
           (println (.-message e)))))))
