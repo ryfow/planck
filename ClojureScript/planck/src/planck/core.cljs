@@ -93,7 +93,14 @@
                             var (resolve env sym)]
                         (:meta var)))))
             (try
-              (cljs/eval cenv form
+              (cljs/eval-str*
+                {:*compiler*     cenv
+                 :*cljs-ns*      @current-ns
+                 :*ns*           *ns*
+                 :*data-readers* tags/*cljs-data-readers*
+                 :*eval-fn*      js/eval}
+                line
+                nil
                 (fn [res]
                   (prn res)
                   (when-not
