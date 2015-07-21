@@ -100,10 +100,11 @@
                  :*analyze-deps* true
                  :*load-macros*  true
                  :*load-fn*      (fn [name cb])
-                 :*eval-fn*      (fn [source] (println source) (js/eval source))
-                 :verbose        true}
+                 :*eval-fn*      (fn [source] (prn source) (js/eval (:source source)))
+                 :*sm-data*      nil}
                 line
                 nil
+                {:verbose true}
                 (fn [res]
                   (prn res)
                   (when-not

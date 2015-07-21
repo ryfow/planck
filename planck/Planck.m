@@ -88,6 +88,7 @@
     };
     
     [context evaluateScript:@"cljs.core.set_print_fn_BANG_.call(null,PLANCK_PRINT_FN);"];
+     [context evaluateScript:@"cljs.core.set_print_err_fn_BANG_.call(null,PLANCK_PRINT_FN);"];
     
     [readEvalPrintFn callWithArguments:@[@"(defn slurp \"Slurps a file\" [filename] (js/PLANCK_SLURP_FN filename))"]];
     [readEvalPrintFn callWithArguments:@[@"(defn spit \"Spits a file\" [filename content] (js/PLANCK_SPIT_FN filename content) nil)"]];
