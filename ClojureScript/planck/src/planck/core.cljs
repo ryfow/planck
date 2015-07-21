@@ -11,7 +11,7 @@
 
 (def DEBUG false)
 
-(def cenv (cljs/empty-env))
+(def st (cljs/empty-state))
 
 (defn ^:export setup-cljs-user []
   (js/eval "goog.provide('cljs.user')")
@@ -29,8 +29,7 @@
   (r/read-string {:read-cond :allow :features #{:cljs}} line))
 
 (defn ^:export is-readable? [line]
-  (binding [r/*data-readers* tags/*cljs-data-readers*
-            cljs.env/*compiler* cenv]
+  (binding [r/*data-readers* tags/*cljs-data-readers*]
     (try
       (repl-read-string line)
       true
@@ -94,11 +93,15 @@
                         (:meta var)))))
             (try
               (cljs/eval-str*
-                {:*compiler*     cenv
+                {:*compiler*     st
                  :*cljs-ns*      @current-ns
                  :*ns*           *ns*
                  :*data-readers* tags/*cljs-data-readers*
-                 :*eval-fn*      js/eval}
+                 :*analyze-deps* true
+                 :*load-macros*  true
+                 :*load-fn*      (fn [name cb])
+                 :*eval-fn*      (fn [source] (println source) (js/eval source))
+                 :verbose        true}
                 line
                 nil
                 (fn [res]
