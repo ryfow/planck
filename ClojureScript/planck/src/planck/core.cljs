@@ -9,7 +9,7 @@
             [clojure.string :as s]
             [cljs.env]))
 
-(def DEBUG false)
+(def DEBUG true)
 
 (def st (cljs/empty-state))
 
@@ -99,22 +99,24 @@
                  :*analyze-deps* true
                  :*load-macros*  true
                  :*load-fn*      (fn [name cb])
-                 :*eval-fn*      (fn [source] (prn source) (js/eval (:source source)))
+                 :*eval-fn*      (fn [source] (prn "source:" source) (js/eval (:source source)))
                  :*sm-data*      nil}
                 line
                 nil
                 {:verbose true
                  :context :expr
                  :def-emits-var true}
-                (fn [res]
-                  (prn res)
+                (fn [{:keys [ns value] :as ret}]
+                  (prn ret)
+                  (prn value)
                   (when-not
                     (or ('#{*1 *2 *3 *e} form)
                       (ns-form? form))
                     (set! *3 *2)
                     (set! *2 *1)
-                    (set! *1 res))
-                  (reset! current-ns ana/*cljs-ns*)))
+                    (set! *1 value))
+                  (when (ns-form? form)
+                    (reset! current-ns ns))))
               (catch js/Error e
                 (set! *e e)
                 (print (.-message e) "\n" (first (s/split (.-stack e) #"eval code")))))))
