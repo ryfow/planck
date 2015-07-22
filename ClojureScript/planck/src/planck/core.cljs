@@ -77,51 +77,50 @@
             *ns* (create-ns @current-ns)
             r/*data-readers* tags/*cljs-data-readers*]
     (let [env (assoc (ana/empty-env) :context :expr
-                                     :ns {:name @current-ns})]
-      (try
-        (let [_ (when DEBUG (prn "line:" line))
-              form (repl-read-string line)]
-          (if (repl-special? form)
-            (case (first form)
-              in-ns (reset! current-ns (second (second form)))
-              doc (if (repl-specials (second form))
-                    (repl/print-doc (repl-special-doc (second form)))
-                    (repl/print-doc
-                      (let [sym (second form)
-                            var (resolve env sym)]
-                        (:meta var)))))
-            (try
-              (cljs/eval-str*
-                {:*compiler*     st
-                 :*cljs-ns*      @current-ns
-                 :*ns*           *ns*
-                 :*data-readers* tags/*cljs-data-readers*
-                 :*analyze-deps* true
-                 :*load-macros*  true
-                 :*load-fn*      (fn [name cb])
-                 :*eval-fn*      (fn [source]
-                                   (try
-                                     {:result (js/eval (:source source))}
-                                     (catch :default e {:exception e})))
-                 :*sm-data*      nil}
-                line
-                nil
-                {:verbose       true
-                 :context       :expr
-                 :def-emits-var true}
-                (fn [{:keys [ns value] :as ret}]
-                  (prn ret)
-                  (prn value)
-                  (when-not
-                    (or ('#{*1 *2 *3 *e} form)
-                      (ns-form? form))
-                    (set! *3 *2)
-                    (set! *2 *1)
-                    (set! *1 value))
-                  (when (ns-form? form)
-                    (reset! current-ns ns))))
-              (catch js/Error e
+                                     :ns {:name @current-ns})
+          _ (when DEBUG (prn "line:" line))
+          form (repl-read-string line)]
+      (if (repl-special? form)
+        (case (first form)
+          in-ns (reset! current-ns (second (second form)))
+          doc (if (repl-specials (second form))
+                (repl/print-doc (repl-special-doc (second form)))
+                (repl/print-doc
+                  (let [sym (second form)
+                        var (resolve env sym)]
+                    (:meta var)))))
+        (cljs/eval-str*
+          {:*compiler*     st
+           :*cljs-ns*      @current-ns
+           :*ns*           *ns*
+           :*data-readers* tags/*cljs-data-readers*
+           :*analyze-deps* true
+           :*load-macros*  true
+           :*load-fn*      (fn [name cb])
+           :*eval-fn*      (fn [source]
+                             (try
+                               {:result (js/eval (:source source))}
+                               (catch :default e
+                                 {:error true :exception e})))
+           :*sm-data*      nil}
+          line
+          nil
+          {:verbose       true
+           :context       :expr
+           :def-emits-var true}
+          (fn [{:keys [ns value] :as ret}]
+            (prn ret)
+            (if-not (:error value)
+              (let [result (:result value)]
+                (prn result)
+                (when-not
+                  (or ('#{*1 *2 *3 *e} form)
+                    (ns-form? form))
+                  (set! *3 *2)
+                  (set! *2 *1)
+                  (set! *1 result))
+                (when (ns-form? form)
+                  (reset! current-ns ns)))
+              (let [e (:exception value)]
                 (set! *e e)
-                (print (.-message e) "\n" (first (s/split (.-stack e) #"eval code")))))))
-        (catch js/Error e
-          (println (.-message e)))))))
+                (print (.-message e) "\n" (first (s/split (.-stack e) #"eval code")))))))))))
