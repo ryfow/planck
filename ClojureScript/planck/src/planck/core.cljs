@@ -99,12 +99,15 @@
                  :*analyze-deps* true
                  :*load-macros*  true
                  :*load-fn*      (fn [name cb])
-                 :*eval-fn*      (fn [source] (prn "source:" source) (js/eval (:source source)))
+                 :*eval-fn*      (fn [source]
+                                   (try
+                                     {:result (js/eval (:source source))}
+                                     (catch :default e {:exception e})))
                  :*sm-data*      nil}
                 line
                 nil
-                {:verbose true
-                 :context :expr
+                {:verbose       true
+                 :context       :expr
                  :def-emits-var true}
                 (fn [{:keys [ns value] :as ret}]
                   (prn ret)
