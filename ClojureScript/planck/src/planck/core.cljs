@@ -77,8 +77,7 @@
             *ns* (create-ns @current-ns)
             r/*data-readers* tags/*cljs-data-readers*]
     (let [env (assoc (ana/empty-env) :context :expr
-                                     :ns {:name @current-ns}
-                                     :def-emits-var true)]
+                                     :ns {:name @current-ns})]
       (try
         (let [_ (when DEBUG (prn "line:" line))
               form (repl-read-string line)]
