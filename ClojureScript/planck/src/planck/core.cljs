@@ -104,7 +104,9 @@
                  :*sm-data*      nil}
                 line
                 nil
-                {:verbose true}
+                {:verbose true
+                 :context :expr
+                 :def-emits-var true}
                 (fn [res]
                   (prn res)
                   (when-not
